@@ -1,0 +1,9 @@
+{
+  "name": "tt-reasoning-skills",
+  "version": "0.1.0",
+  "description": "13 composable reasoning skills for AI agents — a reason router plus 12 atomic skills organized around 6 cognitive gaps.",
+  "license": "MIT",
+  "private": true,
+  "keywords": ["agent-skills", "claude-code", "codex", "cursor", "reasoning", "critical-thinking"],
+  "repository": { "type": "git", "url": "git+https://github.com/pbwheel/tt-reasoning-skills.git" }
+}
