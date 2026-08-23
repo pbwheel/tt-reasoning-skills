@@ -1,6 +1,6 @@
 {
   "name": "tt-reasoning-skills",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "13 composable reasoning skills for AI agents — a reason router plus 12 atomic skills organized around 6 cognitive gaps.",
   "license": "MIT",
   "private": true,

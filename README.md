@@ -1,50 +1,224 @@
 # tt-reasoning-skills
 
-13 个可组合的推理 skill，让 AI agent 在动手之前先想清楚。
+13 个可组合的推理 skill，把一个人惯用的思考方法装进 AI agent——让它动手之前先想清楚；它管「怎么想」，不管「想什么」（[边界](#边界非目标)）。
 
 [English](README.en.md) · [简体中文](README.md)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Harness](https://img.shields.io/badge/Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Cursor-supported-1f6feb)
 
-> 范围说明：这是一套**推理方法论** skill 库——帮 agent 诊断「什么在阻碍进展」并选对思考路径。它不是代码生成工具，不替代领域专业知识，也不承诺一次给出「完美答案」。
-
 ## 它解决什么问题
 
-Agent 直接给答案时，最常见的失败不是知识不够，而是卡在六类认知缺口之一：问题本身没问清、机制没吃透、证据不足、方案被惯性假设束缚、决策依据脆弱、或方向本身不明。本库把 12 个经典推理方法做成职责单一的原子 skill，再加一个 `reason` 路由器负责诊断与调度：
+会思考的人都有自己的方法库——问清问题再动手、先核证据再下结论、重大决策前先给对立面造最强论证。本库把这样一个「个人的思考方法库」做成 AI 可执行的 skill：把 12 个经典推理方法（[源自这篇文章](#来源)）拆成各自独立的小 skill，再加一个 [`reason`](skills/reason/SKILL.md) 路由器负责诊断与调度。一个直观的类比：`reason` 就像医院的分诊台——先判断你的「病」属于哪一类缺口，再把你送到对的科室；而且没病就不挂号，简单问题直接干活，不套任何流程。
+
+整套库是纯 Markdown，无脚本、无依赖。
 
 ```text
-                         reason
-                            |
-              +-------------+-------------+
-              v             v             v
-          Understand      Research        Solve
-              |             |             |
-              +-------------+-------------+
-                            v
-                          Decide
-                            |
-                            v
-                         Validate
+reason：先诊断阻塞缺口，再走最短够用路径
+
+├─ 无缺口阻塞 → 直接完成任务，不套任何推理流程
+├─ 单一缺口阻塞 → 从对应族选一个 skill（见下表）
+└─ 缺口相互依赖 → 组成最短链，每步重评，能行动即停
 ```
 
-| 认知缺口 | 对应 skill |
-|---|---|
-| Clarity · 清晰度 | `socratic-clarify` |
-| Knowledge · 理解 | `explain-two-levels`, `reverse-engineer` |
-| Evidence · 证据 | `deep-research`, `fact-audit` |
-| Solution · 方案 | `first-principles`, `cross-domain`, `expert-panel` |
-| Decision · 决策 | `steelman-decision`, `minimum-experiment` |
-| Direction · 方向 | `talent-discovery`, `life-design` |
+六类认知缺口，各配一到三个方法：
 
-当请求的交付物没有被任何认知缺口阻塞时，`reason` 直接完成任务，不强行套用推理流程。
+| 缺口 | Skill | 原文方法 | 它做什么 |
+|---|---|---|---|
+| 问题没问清 · Clarity | [`socratic-clarify`](skills/socratic-clarify/SKILL.md) | 苏格拉底式提问 | 一次只问一个问题，把「我感觉卡住了」这样的混沌诉求变成能动手的问题定义 |
+| 概念没吃透 · Knowledge | [`explain-two-levels`](skills/explain-two-levels/SKILL.md) | 双层解释法 | 分两层解释概念：先给直觉和一个例子，再讲真实机制——避免「把我当小学生解释」造成的懂了假象 |
+| 概念没吃透 · Knowledge | [`reverse-engineer`](skills/reverse-engineer/SKILL.md) | 反向拆解 | 面对一个具体的成功作品，从结果往回推它为什么有效、哪些经验可以迁移 |
+| 证据不足 · Evidence | [`deep-research`](skills/deep-research/SKILL.md) | 横纵分析法 | 对整个主题建立带来源的全景认知：历史脉络、各方格局、未来走向 |
+| 证据不足 · Evidence | [`fact-audit`](skills/fact-audit/SKILL.md) | 事实核查 | 把一个具体说法拆成可核验主张、推断与价值判断，逐条给裁决，再检查推理本身有没有漏洞 |
+| 方案被惯性束缚 · Solution | [`first-principles`](skills/first-principles/SKILL.md) | 第一性原理 | 剥掉惯性假设，从事实与目标重新推导方案——「只有重写才能解决」往往只是未验证的假设 |
+| 方案被惯性束缚 · Solution | [`cross-domain`](skills/cross-domain/SKILL.md) | 跨领域借解 | 把问题抽象成结构，去远领域找同构问题的成熟解法，并注明每个类比何时失效 |
+| 方案被惯性束缚 · Solution | [`expert-panel`](skills/expert-panel/SKILL.md) | 专家会诊 | 让几个真正互补的专业视角各自分析、互相质疑，把真分歧摆出来再综合——不是凑一场热闹 |
+| 决策依据脆弱 · Decision | [`steelman-decision`](skills/steelman-decision/SKILL.md) | 双向钢人论证 | 给每个选项都造出最强论证（而不是只给心中答案找理由），再点出哪几个变量能翻转结论 |
+| 决策依据脆弱 · Decision | [`minimum-experiment`](skills/minimum-experiment/SKILL.md) | 用最小实验替代空想 | 把「要不要投入三个月」这样的空想，变成明天就能做、可随时叫停的最小实验 |
+| 方向不明 · Direction | [`talent-discovery`](skills/talent-discovery/SKILL.md) | 挖掘隐藏天赋 | 从一段段具体经历（而不是形容词）推断你的可迁移优势，以及放大或抑制它的条件 |
+| 方向不明 · Direction | [`life-design`](skills/life-design/SKILL.md) | 人生设计术 | 基于已确认的优势和价值观，生成几条真正不同、各自可检验的未来路径——含维持现状那条 |
 
-## 核心特性
+## 三个值得知道的设计
 
-- **reason 路由器**：先诊断最高的阻塞缺口，再选择最短足够路径；没有缺口就直接干活，不强加推理流程
-- **可组合成链**：skill 按依赖组合（如 `first-principles -> steelman-decision -> minimum-experiment`），每完成一步重新评估，用户能采取下一个有意义的行动即停
-- **共享协议**：证据、提问、组合与边界行为由 5 份 protocol 统一约束，13 个 skill 行为一致、可互换
-- **平台无关**：纯 Markdown，无脚本、无依赖
+1. **路由器只找「最高的阻塞缺口」**：没有缺口就直接干活。只有当缺口相互依赖时才组成链，每完成一步重新评估，能行动就停——不会为推理而推理。
+2. **行为由 5 份共享协议约束**：证据怎么分级（事实 / 推断 / 假设 / 判断 / 未知）、什么时候允许停下来反问用户、哪些 skill 可以组合——13 个 skill 的行为因此可预期，而不是每次随模型心情波动。
+3. **它管「怎么想」，不管「想什么」**：不替代领域专业知识，不写代码、不执行工程动作，也不承诺联网检索——检索能力取决于你用的 agent 本身（详见[边界](#边界非目标)）。
+
+## 使用示例
+
+12 个 skill 各配一组「什么时候用 / 什么时候不用 / 它会怎么做」：先给出这类请求的原话示例，再说明它不适合的场景与实际执行过程。路由与组合规则见 `protocols/`。
+
+**socratic-clarify**
+
+什么时候用：
+
+```text
+「我感觉卡住了，想要不一样的生活」
+「指标不好，需要个看板」
+```
+
+这类请求的特征是：一条消息混着多个诉求、说不清成功标准、把感受/事实/猜测搅在一起。
+
+什么时候不用：问题已经明确，缺的只是信息、方案或选项——再澄清就是走过场。
+
+它会怎么做：一次只问一个问题，每个问题按「对问题定义的影响」挑选；输出分离出原始诉求、可行动问题、已确认事实与未验证假设，仅在仍有阻塞时以问题收尾。
+
+**explain-two-levels**
+
+什么时候用：
+
+```text
+「什么是差分隐私？」
+「CRDT 复制到底怎么工作的？」
+```
+
+这类请求的特征是：一个概念挡在任务前面，而「把我当小学生解释」只会制造懂的错觉。
+
+什么时候不用：真实任务是核验、设计或选择——解释概念是在回避正事。
+
+它会怎么做：第一层给准确直觉和一个具体例子，并标明类比在哪失效；第二层讲真实机制与边界，末尾用检验确认理解的是机制而非类比。
+
+**reverse-engineer**
+
+什么时候用：
+
+```text
+「这个引导流程做得真好——为什么有效？」
+```
+
+这类请求的特征是：存在具体作品，目标是学它而不是评审它。
+
+什么时候不用：没有具体作品可看。凭名声「拆解」等于编造。
+
+它会怎么做：从可观察结果往回推关键选择，每个推断给出证据与备择解释；产出区分「可迁移原则」与「只在该作品中成立的细节」。
+
+**deep-research**
+
+什么时候用：
+
+```text
+「给我固态电池的真实图景——历史、格局、走向」
+```
+
+这类请求的特征是：任务是对整个主题建立认知。
+
+什么时候不用：只有一两个具体说法需要核验——那是有限审计，不是全景研究。
+
+它会怎么做：请求先变成有边界的问题；纵轴梳理带来源的历史与路径依赖，横轴按用户目标对比替代方案，前向给出少量带前提与预警信号的未来情景——冲突与无证据的点保持标注。
+
+**fact-audit**
+
+什么时候用：
+
+```text
+「这篇文章说该框架能让所有 API 快 10 倍，可信吗？」
+```
+
+这类请求的特征是：一个具体说法、分析或论证需要检验。
+
+什么时候不用：目标是对一个领域建立整体认知——什么都审计等于什么都不审计。
+
+它会怎么做：每个关键主张给出账本裁决（已证实 / 基本成立但需收窄 / 存在争议 / 证据不足 / 明显错误），再审计推理本身的隐含假设；产出是收窄后的主张与明确置信度。
+
+**first-principles**
+
+什么时候用：
+
+```text
+「Java 服务越来越难维护，要不要用 Rust 重写？」
+```
+
+这类请求的特征是：选项集本身长在惯性假设上，补丁摞补丁。
+
+什么时候不用：选项本身是健全的、事实也无争议——该做的是选择，不是重构问题。
+
+它会怎么做：分离不可约事实、未验证假设、真实目标与真约束，每条「约束」都要自证，再从幸存者出发重推导最小设计——尊重迁移成本与存量用户；产出点名旧方案中哪些只是表面修补。
+
+**cross-domain**
+
+什么时候用：
+
+```text
+「本行业能试的都试了——其他领域怎么处理这种问题？」
+```
+
+这类请求的特征是：本地解空间感觉已穷尽。
+
+什么时候不用：同领域方案或直接事实就能回答——比类比更便宜也更安全。
+
+它会怎么做：问题剥掉领域名词还原成结构，从远域检索对它有成熟应对的机制（如 agent 记忆设计借鉴 CPU 缓存、图书馆剔旧）；每个类比写明结构映射与失效点，产出是带迁移边界的适配选项。
+
+**expert-panel**
+
+什么时候用：
+
+```text
+「工程说能上、法务担心、销售本季度就要」
+```
+
+这类请求的特征是：真正不同的专业模型在死锁问题。
+
+什么时候不用：单一领域有确定答案，或者只是想要一场热闹的对话。
+
+它会怎么做：选最小的互补模型集合并让它们互质，分出共同事实与真分歧；产出是整合后的建议或边界清晰的选项集，立场标注为判断、绝不洗成专家共识。
+
+**steelman-decision**
+
+什么时候用：
+
+```text
+「外采和自建都可行，选哪个？」
+```
+
+这类请求的特征是：两个以上选项各有真实取舍，事实已足够比较。
+
+什么时候不用：选项集还需要重构（`first-principles`）或事实基础缺失（`fact-audit`）。
+
+它会怎么做：每个选项按同一标准造最强论证，点名可能反转排序的决策变量；若一个问题就能翻转推荐，只问那一个。建议区分证据与价值权重，并声明置信度。
+
+**minimum-experiment**
+
+什么时候用：
+
+```text
+「要不要花三个月做企业版集成？」
+```
+
+这类请求的特征是：继续空想无法解决不确定性，只有行为数据能。
+
+什么时候不用：现有证据能直接回答——先研究比先测试便宜。
+
+它会怎么做：最有价值的不确定性变成最便宜的可反转实验，指标与继续/修正/停止阈值在执行前预承诺；产出说明每种结果意味着什么、明天能做的第一个动作——设计实验本身不授权任何行动。
+
+**talent-discovery**
+
+什么时候用：
+
+```text
+「我不知道自己真正擅长什么」
+```
+
+这类请求的特征是：关于优势的证据从未被一段一段地拼起来过。
+
+什么时候不用：证据还没攒够就想直接要未来路径（`life-design` 需要素材），或想要一个性格标签——这个 skill 不发身份证书。
+
+它会怎么做：一次一段具体经历——情境、行为、结果、难度、能量；模式变成能力假设，连同支持与反驳证据、放大或抑制它的条件。
+
+**life-design**
+
+什么时候用：
+
+```text
+「我的下一章应该长什么样？」
+```
+
+这类请求的特征是：对优势和价值观已了解够多，想构造未来，而不是要同一答案的换皮版本。
+
+什么时候不用：优势证据还缺——`talent-discovery` 之前生成路径等于写小说。
+
+它会怎么做：设计简报来自实际选择而非愿望；生成数条真正不同的路径——含延续现状——每条带成立前提、代价与一个可反转探针。产出是一组可检验的未来组合，不是命运判决。
+
+完整工作流见 [`examples/`](examples/)（软件工程 / 产品决策 / 研究 / 个人发展四类），路由行为用例见 [`evals/`](evals/)。
 
 ## 安装
 
@@ -75,24 +249,6 @@ npx skills add pbwheel/tt-reasoning-skills --list
 
 > Read https://github.com/pbwheel/tt-reasoning-skills and follow its `skills/reason/SKILL.md` to route this question through the right reasoning skills: 「……」
 
-## 技能目录
-
-| 类别 | Skill | 一句话职责 |
-|---|---|---|
-| Router | [`reason`](skills/reason/SKILL.md) | 诊断缺口，选择并执行最短足够推理路径 |
-| Clarify | [`socratic-clarify`](skills/socratic-clarify/SKILL.md) | 把模糊混杂的问题变成可行动的问题定义 |
-| Learn | [`explain-two-levels`](skills/explain-two-levels/SKILL.md) | 先直觉模型后专业机制地吃透一个概念 |
-| Learn | [`reverse-engineer`](skills/reverse-engineer/SKILL.md) | 从成功作品反推问题、原则与可迁移经验 |
-| Research | [`deep-research`](skills/deep-research/SKILL.md) | 建立带来源支撑的主题全景：历史、现状、走向 |
-| Research | [`fact-audit`](skills/fact-audit/SKILL.md) | 核验事实，并检验事实是否真能支撑结论 |
-| Solve | [`first-principles`](skills/first-principles/SKILL.md) | 剥离惯性假设，从事实与目标重新推导方案 |
-| Solve | [`cross-domain`](skills/cross-domain/SKILL.md) | 在远域同构问题中找成熟机制，再带边界迁移回来 |
-| Solve | [`expert-panel`](skills/expert-panel/SKILL.md) | 用真正互补的专业模型分析，暴露分歧后综合 |
-| Decide | [`steelman-decision`](skills/steelman-decision/SKILL.md) | 给每个选项造最强论证后，再做有据选择 |
-| Decide | [`minimum-experiment`](skills/minimum-experiment/SKILL.md) | 把关键不确定性变成最便宜的可反转实验 |
-| Self | [`talent-discovery`](skills/talent-discovery/SKILL.md) | 从经历证据推断可迁移优势及其触发条件 |
-| Self | [`life-design`](skills/life-design/SKILL.md) | 从现状与价值观生成多条可检验的未来路径 |
-
 ## 工作原理
 
 路由与行为由共享协议约束（位于 [`protocols/`](protocols/)）：
@@ -105,19 +261,42 @@ npx skills add pbwheel/tt-reasoning-skills --list
 
 `reason` 读取边界与组合规则 → 诊断最高阻塞缺口 → 选择一个 skill 或一条链 → 执行并在每步后重评。调用方式取决于你的 agent：Claude Code 会根据 description 自动触发，也可以直接说「用 fact-audit 核验这个说法」；Codex 类 agent 可用 `$reason` 这样的命令语法；plan-only 模式只输出路由结果不执行。
 
-## 使用示例
-
-- **工程决策**：「Should we rewrite our legacy service in Rust?」→ 路由为 `first-principles -> steelman-decision -> minimum-experiment`，任一步使你能够行动即提前停止
-- **个人发展**：从一段具体经历出发，`talent-discovery` 推断可迁移优势，`life-design` 生成多条可检验的未来路径，必要时以 `minimum-experiment` 收尾
-
-完整工作流见 [`examples/`](examples/)（软件工程 / 产品决策 / 研究 / 个人发展四类），路由行为用例见 [`evals/`](evals/)。
-
 ## 边界（非目标）
 
 - 不替代领域专业知识：skill 组织推理过程，专业内容仍需领域输入
 - 不生成代码、不执行工程动作：这是推理方法库
 - 不追求一次给出「完美答案」：每一步以「用户能采取下一个有意义的行动」为停止条件
 - 不承诺实时联网检索：`deep-research` 与 `fact-audit` 在宿主 agent 的工具能力范围内工作
+
+## 来源
+
+原文是一份**个人**思考方法库——作者在长期使用中反复验证的 12 个 Prompt；本库把它变成任何 agent 都能加载的版本：你的方法，它的执行。
+
+### 为什么不直接用原文的 12 个 Prompt？
+
+完全可以，原文的 Prompt 单独用依然有效。这套 skill 补的是它们之上的一层：
+
+- **怎么选**：12 个方法选哪个、按什么顺序、何时停，原文交给使用者判断；`reason` 把这层判断变成 agent 可执行的缺口诊断
+- **怎么连**：单个 Prompt 是孤立的一次对话；skill 带组合字段与停止条件，才能按依赖组成链
+- **怎么稳**：Prompt 输出随模型与上下文波动；5 份 protocol 统一证据分级、提问时机与行为边界，13 个 skill 的行为可预期
+
+### 原文与致谢
+
+12 个原子 skill 的推理方法源自数字生命卡兹克的文章：
+
+> [《都 Agent 时代了，我还是想分享给你这 12 个我最常用的 Prompt》](https://mp.weixin.qq.com/s/NAdhdFrUq9-BKelqzqpwBQ)（微信公众号原文）
+
+原文把 12 个 Prompt 归入「问清问题、学习、解决问题、决策、认识自己」五个场景。本库在此基础上做了三处加工：
+
+- 把每个方法改写成独立、可组合的 skill；
+- 将原文的「学习」场景拆分为 Learn 与 Research 两族，重新对应到六类认知缺口；
+- 新增原文之外的 `reason` 路由器与 `protocols/` 共享协议层。
+
+12 个方法不是这套库的上限——按仓库约定（`AGENTS.md`）把你自己的思考方法新增为 skill，即可进入同一个路由体系。
+
+各 skill 与原文 Prompt 的对应关系见开头[技能表](#它解决什么问题)的「原文方法」列。感谢原作者的慷慨分享。
+
+如果这套 skill 帮到了你，欢迎点一个 Star。
 
 ## License
 

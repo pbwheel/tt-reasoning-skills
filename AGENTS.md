@@ -25,7 +25,7 @@
 2. 对照 `protocols/reasoning-contract.md` 自查元数据与行为要求
 3. 在 `evals/` 对应文件补用例（路由、边界或组合）
 4. 如影响路由：更新 `protocols/skill-boundaries.md`
-5. 两份 README 的技能目录表各加一行
+5. 两份 README 开头的技能表（缺口 / Skill / 原文方法 / 它做什么）各加一行
 6. 版本：用户可见行为变化升 minor，内部润色升 patch
 
 ## 发布流程
